@@ -1,6 +1,9 @@
 package utils
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type InitializeUploadRequest struct {
 	Owner          string `json:"owner"`
@@ -41,4 +44,15 @@ func GetFileSize(filePath string) (int64, error) {
 		return 0, err // return 0 and error if the file doesn't exist or cannot be accessed
 	}
 	return file.Size(), nil // return the file size
+}
+
+func TrimURN(urn string) string {
+	// Split the URN by colon ":"
+	parts := strings.Split(urn, ":")
+	if len(parts) > 0 {
+		// The last part is the ID
+		return parts[len(parts)-1]
+	}
+	// Return an empty string if the URN is invalid or doesn't have a valid format
+	return ""
 }

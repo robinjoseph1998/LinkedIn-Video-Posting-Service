@@ -75,53 +75,7 @@ func InitializeLinkedInVideoUpload(accessToken, owner string, fileSize int) (*ut
 	return &uploadResp, nil
 }
 
-// *********************** STEP: 2 - FINALIZING THE VIDEO ******************************//
-func FinalizeVideoUpload(accessToken, urn string, parts []string) error {
-	// Prepare the request body
-	payload := utils.FinalizeUploadPayload{
-		FinalizeUploadRequest: utils.FinalizeUploadRequest{
-			Video:           urn,
-			UploadToken:     "",
-			UploadedPartIds: parts,
-		},
-	}
-
-	// Convert the payload to JSON
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal request body: %v", err)
-	}
-
-	// Create the POST request
-	req, err := http.NewRequest("POST", "https://api.linkedin.com/rest/videos?action=finalizeUpload", bytes.NewBuffer(body))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
-	}
-
-	// Set the required headers
-	req.Header.Set("LinkedIn-Version", "202502") // Replace with the version number in the format YYYYMM
-	req.Header.Set("X-RestLi-Protocol-Version", "2.0.0")
-	req.Header.Set("Authorization", "Bearer "+accessToken) // Replace {INSERT_TOKEN} with your actual Bearer token
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("received non-OK response: %v", resp.Status)
-	}
-
-	log.Println("Request successful, video finalized.")
-	return nil
-}
-
-// *********************** STEP: 3 - UPLOADING THE VIDEO IN CHUNKS ***********************//
+// *********************** STEP: 2 - UPLOADING THE VIDEO IN CHUNKS ***********************//
 func UploadVideoFile(filePath string, uploadInstructions []utils.UploadInstruction, accessToken string) ([]string, error) {
 	// Open the file
 	file, err := os.Open(filePath)
@@ -179,11 +133,57 @@ func UploadVideoFile(filePath string, uploadInstructions []utils.UploadInstructi
 	return uploadPartIds, nil
 }
 
+// *********************** STEP: 3 - FINALIZING THE VIDEO ******************************//
+func FinalizeVideoUpload(accessToken, urn string, parts []string) error {
+	// Prepare the request body
+	payload := utils.FinalizeUploadPayload{
+		FinalizeUploadRequest: utils.FinalizeUploadRequest{
+			Video:           urn,
+			UploadToken:     "",
+			UploadedPartIds: parts,
+		},
+	}
+
+	// Convert the payload to JSON
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Create the POST request
+	req, err := http.NewRequest("POST", "https://api.linkedin.com/rest/videos?action=finalizeUpload", bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Set the required headers
+	req.Header.Set("LinkedIn-Version", "202502") // Replace with the version number in the format YYYYMM
+	req.Header.Set("X-RestLi-Protocol-Version", "2.0.0")
+	req.Header.Set("Authorization", "Bearer "+accessToken) // Replace {INSERT_TOKEN} with your actual Bearer token
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("received non-OK response: %v", resp.Status)
+	}
+
+	log.Println("Request successful, video finalized.")
+	return nil
+}
+
 // *********************** STEP: 4 - CREATING THE POST *************************//
 func CreatePost(accessToken, videoUrn, authorUrn, title, commentary string) error {
-	// Prepare the post data in the correct format
+	// Prepare the post data in the new format
 	postData := map[string]interface{}{
-		"author":     authorUrn,
+		"author":     authorUrn, // e.g., "urn:li:organization:5515715"
 		"commentary": commentary,
 		"visibility": "PUBLIC",
 		"distribution": map[string]interface{}{
@@ -194,7 +194,7 @@ func CreatePost(accessToken, videoUrn, authorUrn, title, commentary string) erro
 		"content": map[string]interface{}{
 			"media": map[string]interface{}{
 				"title": title,
-				"id":    videoUrn, // The video urn should be used here
+				"id":    videoUrn, // e.g., "urn:li:video:C5F10AQGKQg_6y2a4sQ"
 			},
 		},
 		"lifecycleState":            "PUBLISHED",
@@ -217,7 +217,7 @@ func CreatePost(accessToken, videoUrn, authorUrn, title, commentary string) erro
 	// Set headers
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("X-Restli-Protocol-Version", "2.0.0")
-	req.Header.Set("LinkedIn-Version", "202502") // Change version number if necessary
+	req.Header.Set("LinkedIn-Version", "202502") // Use the appropriate API version
 	req.Header.Set("Content-Type", "application/json")
 
 	// Make the request
@@ -230,13 +230,13 @@ func CreatePost(accessToken, videoUrn, authorUrn, title, commentary string) erro
 
 	// Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
-	// log.Printf("Response Body: %s\n", string(body))
 	if err != nil {
 		return fmt.Errorf("error reading response body: %v", err)
 	}
 
-	// Log the response body for debugging
+	// Log the response for debugging
 	log.Printf("Response Status: %d\n", resp.StatusCode)
+	log.Printf("Response Body: %s\n", string(body))
 
 	// Check if the status is not OK
 	if resp.StatusCode != http.StatusCreated {

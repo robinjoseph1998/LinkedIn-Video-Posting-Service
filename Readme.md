@@ -1,4 +1,11 @@
 
+# HOW TO RUN ?
+
+Just enter: go run main.go
+
+Note: add your accessToken in .env and the your organization urn
+
+
 # FOR CHECKING ACCESS-TOKEN SCOPES AND DETAILS
 
 curl --location --request POST 'https://www.linkedin.com/oauth/v2/introspectToken' \
