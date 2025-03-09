@@ -22,7 +22,7 @@ func main() {
 	accessToken := os.Getenv("AccessToken")                //add your Access Token in .env
 	owner := "urn:li:organization:<your_organization_urn>" // replace with your oraganization URN
 
-	filePath := "temp.mp4"
+	filePath := "media/temp.mp4"
 
 	fileSize, err := utils.GetFileSize(filePath) //Getting File Size
 	if err != nil {
