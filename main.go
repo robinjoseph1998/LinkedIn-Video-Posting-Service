@@ -19,8 +19,8 @@ func init() {
 }
 
 func main() {
-	accessToken := os.Getenv("AccessToken")                //add your Access Token in .env
-	owner := "urn:li:organization:<your_organization_urn>" // replace with your oraganization URN
+	accessToken := os.Getenv("AccessToken") //add your Access Token in .env
+	owner := os.Getenv("Owner")             // replace with your oraganization URN
 
 	filePath := "media/temp.mp4"
 

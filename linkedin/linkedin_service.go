@@ -75,7 +75,7 @@ func InitializeLinkedInVideoUpload(accessToken, owner string, fileSize int) (*ut
 	return &uploadResp, nil
 }
 
-// *********************** STEP: 2 - FINIALIZING THE VIDEO ******************************//
+// *********************** STEP: 2 - FINALIZING THE VIDEO ******************************//
 func FinalizeVideoUpload(accessToken, urn string, parts []string) error {
 	// Prepare the request body
 	payload := utils.FinalizeUploadPayload{
